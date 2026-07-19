@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import DevelopmentStage from "./stages/development";
 import PreProductionStage from "./stages/pre-production";
+import ProductionStage from "./stages/production";
 import EvidenceLog from "./stages/evidence-log";
 
 const STAGES = [
@@ -46,6 +47,7 @@ export default function ProjectWorkspace({ id, stage }: { id: string, stage?: st
       case "pre-production":
         return <PreProductionStage projectId={projectId} />;
       case "production":
+        return <ProductionStage projectId={projectId} />;
       case "post-production":
       case "delivery":
         return (
