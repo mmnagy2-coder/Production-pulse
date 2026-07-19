@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { format } from "date-fns";
 import { Plus, Film, Loader2, Calendar, FileText, Clapperboard, FolderOpen, Trash2 } from "lucide-react";
@@ -32,10 +32,31 @@ export default function Dashboard() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [logline, setLogline] = useState("");
-  
+  const [isSeeding, setIsSeeding] = useState(false);
+  const seededRef = useRef(false);
+
   const { data: projects, isLoading } = useListProjects();
   const createProject = useCreateProject();
   const deleteProject = useDeleteProject();
+
+  // Seed demo project on first login (fires once when we confirm the user has no projects)
+  useEffect(() => {
+    if (isLoading || seededRef.current) return;
+    if (!projects || projects.length > 0) return;
+
+    seededRef.current = true;
+    setIsSeeding(true);
+
+    fetch("/api/seed-demo", { method: "POST", credentials: "include" })
+      .then((r) => r.json())
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
+      })
+      .catch(() => {
+        // Non-fatal — user can still create projects manually
+      })
+      .finally(() => setIsSeeding(false));
+  }, [isLoading, projects, queryClient]);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,6 +179,12 @@ export default function Dashboard() {
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Loader2 className="w-8 h-8 animate-spin text-border mb-4" />
             <p>Loading projects...</p>
+          </div>
+        ) : isSeeding ? (
+          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+            <p className="font-serif text-lg text-foreground mb-1">Setting up your workspace…</p>
+            <p className="text-sm">Loading a demo project so you can explore every stage.</p>
           </div>
         ) : projects?.length === 0 ? (
           <div className="text-center py-24 border border-dashed border-border rounded-md bg-card/50">

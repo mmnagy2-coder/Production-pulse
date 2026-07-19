@@ -7,6 +7,7 @@ import takesRouter from "./takes";
 import cutsRouter from "./cuts";
 import deliverablesRouter from "./deliverables";
 import evidenceLogRouter from "./evidenceLog";
+import seedDemoRouter from "./seedDemo";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(takesRouter);
 router.use(cutsRouter);
 router.use(deliverablesRouter);
 router.use(evidenceLogRouter);
+router.use(seedDemoRouter);
 
 export default router;
