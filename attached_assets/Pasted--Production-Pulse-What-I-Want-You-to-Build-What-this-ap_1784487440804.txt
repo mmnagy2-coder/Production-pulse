@@ -1,0 +1,132 @@
+# Production Pulse — What I Want You to Build
+
+## What this app is
+
+I am a filmmaker and a film lecturer. I want an app called **Production Pulse** that manages a film production from first idea to final delivery, and at the same time teaches film students how professional production actually works.
+
+The twist that makes it different from every other production tool: it is a professional tool and a teaching tool in one. A working filmmaker can run a real production on it. A student using the exact same screens learns the craft, because the app explains the "why" behind everything and keeps a record of every decision they make.
+
+The one rule that matters most to me: **the app must never do the thinking for the student.** It helps, it flags mistakes, it gives feedback, but the student makes the decisions. That is how they learn.
+
+## Who will use it
+
+- My film students (around 20 of them from September 2026)
+- Independent filmmakers running small productions
+- Eventually, film schools who want proof of what their students can do
+
+Each person signs in with an email and password and sees only their own projects. Students must never be able to see each other's work.
+
+## How the app is organised
+
+A film production moves through five phases, in this order. The app should be organised around these five stages, shown as a list down the left side of the screen that I can expand and collapse:
+
+1. **Development** - the script and the planning
+2. **Pre-Production** - scheduling, shot lists, call sheets
+3. **Production** - the actual shoot days
+4. **Post-Production** - editing and review
+5. **Delivery** - getting the finished film out
+
+Each stage contains tasks. Clicking a task opens it in the main area. I also want two ways of seeing the whole project at a glance: a board view (stages as columns, like a kanban board) and a timeline view (tasks laid out on a calendar, like a Gantt chart).
+
+The crucial thing is that the stages feed each other. Work done in one stage flows automatically into the next. I describe this below.
+
+## What each stage does
+
+### 1. Development: Script and Breakdown
+
+I paste in a screenplay (or upload a text file). I press one button and the app uses AI to break the script down into scenes. For each scene it identifies: the scene heading, whether it is interior or exterior, day or night, the location, roughly how long it is, a one-line summary, and lists of the characters, props and costumes in that scene.
+
+This is called a "script breakdown" and it is one of the first skills every film student must learn.
+
+The AI's breakdown will not be perfect, and that is deliberate. The student's job is to check it and correct it: add the prop the AI missed, remove the character it invented. Every correction they make should be recorded.
+
+### 2. Pre-Production: Schedule and Call Sheets
+
+**The schedule.** All the scenes from the breakdown appear as cards. I drag them onto shoot days (Day 1, Day 2, Day 3...). Films are not shot in story order; you group scenes by location and time of day to save money. The app should understand this and warn me when I make expensive mistakes, for example:
+
+- An actor works Monday and Wednesday but not Tuesday. On a real film you still pay them for Tuesday. Flag it.
+- One day jumps between three different locations. Moving a film crew takes hours. Flag it.
+- One day has too many script pages crammed in. The day will overrun. Flag it.
+
+**The call sheet.** This is the document handed to cast and crew telling everyone where to be and when. The app should generate it automatically from whatever I scheduled: pick a day, and the call sheet appears with that day's scenes, the actors needed, and sensible staggered times (make-up before on-set, and so on). If I change the schedule, the call sheet updates itself. Nothing is typed twice.
+
+There should also be a button that asks the AI to review the call sheet the way an experienced First Assistant Director would review a trainee's work: an overall verdict, specific problems with severity levels, and a short piece of coaching advice.
+
+### 3. Production: The Digital Slate
+
+On a film set, every take is logged. I want a screen that looks like a clapperboard: dark background, big bold fields for Scene, Shot and Take numbers. Two buttons: log the take, or "circle" the take. Circling a take is film language for "this one was good, use it in the edit."
+
+Every logged take appears in a running list with the time it was logged. The take number counts up automatically. This screen will be used on phones on set, so it must work well on a small touchscreen.
+
+### 4. Post-Production: Review
+
+The circled takes from the shoot appear here automatically as the editor's starting list.
+
+I can upload a still image of a cut (a frame from the edit) and click anywhere on the image to pin a numbered comment at that exact spot, the way agencies and studios give feedback on adverts. Each cut has a simple status: Pending, Changes Needed, or Approved.
+
+### 5. Delivery
+
+A simple board with four columns: Not Started, In Progress, In Review, Delivered. I add the things a finished film has to produce (trailer, final master, social media cuts, press stills) and drag them across as they get done.
+
+## The teaching layer
+
+There is a **Teach Mode** switch at the top of the app. When it is on, short explanation boxes appear throughout, each marked with a small "?" badge. They explain the why:
+
+- Why call times are staggered
+- Why films shoot out of story order
+- Why an idle actor between shoot days costs money
+- Why circled takes matter to the editor
+
+When Teach Mode is off, the app looks like a clean professional tool with no explanations. Same screens, two audiences.
+
+## The evidence log (very important to me)
+
+Every meaningful action a user takes must be quietly recorded with a timestamp: ran a breakdown, corrected a tag, scheduled a scene, generated a call sheet, logged a take, circled a take, added a review comment, moved a deliverable.
+
+This is not a technical nicety. I am an education researcher, and this log is the proof of a student's learning. It shows they did the work, what they decided, and when. Later I want to be able to look at a student's log and see their whole production journey. It must be trustworthy, meaning a user cannot fake it or bypass it.
+
+## Look and feel
+
+The design language is already established and I want it kept:
+
+- Clean and editorial, inspired by real film paperwork: paper-white cards, a serif font for headings, strong horizontal rules, a deep red accent colour
+- A proper dark mode, switchable any time
+- The slate screen stays black and yellow like a real clapperboard even in light mode
+- Calm and uncluttered; this is a working tool people will stare at for hours, not a flashy landing page
+
+It must work well on laptops and on phones. The set tools especially will be used on phones.
+
+## The AI parts
+
+Three places use AI, and the app should handle this behind the scenes (I will provide my AI key privately; it must never be visible to users):
+
+1. **Script breakdown** - turning a pasted script into tagged scenes
+2. **Schedule awareness** - spotting the scheduling problems described above
+3. **AD review** - critiquing a call sheet like a mentor would
+
+If the AI is ever unavailable, the app should say so politely and let people carry on working manually. An AI outage must never lock anyone out of their project.
+
+## Working together
+
+If two devices are looking at the same project, a change made on one should show up on the other quickly, like any modern collaborative app. If that proves hard, refreshing the page to see updates is an acceptable fallback for launch, but live updating is the goal.
+
+## What "done" means to me
+
+- I can sign up, sign in, create a project, close the browser, come back, and everything is still there
+- I can paste a script and get an editable breakdown
+- I can drag scenes onto days and get warned about the three scheduling mistakes above
+- I can open any day and see a call sheet I never had to type, and get AI feedback on it
+- I can log and circle takes on my phone, and see them appear in Post-Production
+- I can pin comments on a frame and track deliverables to Delivered
+- Every action shows up in the evidence log
+- Two students can never see each other's projects
+- It is live on the internet at a link I can give my students
+- It has been properly tested, including on mobile, before you hand it to me
+
+## Timeline
+
+I need this live and tested by the end of July 2026, because my students start using it in September.
+
+Please build it entirely on Replit: the app, the database, the hosting, all of it in one place, using whatever technical approach you judge best. Where anything in this brief is ambiguous, ask me rather than guess; where I have not specified something, use your judgement and standard good practice.
+
+Mostafa Nagy
