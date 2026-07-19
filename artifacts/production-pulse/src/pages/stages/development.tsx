@@ -22,8 +22,10 @@ import {
   FileEdit,
   Clock,
   MapPin,
-  Check
+  Check,
+  Download,
 } from "lucide-react";
+import { printShotList } from "@/lib/pdf-export";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -250,14 +252,27 @@ Dialogue..."
               {scenes?.length || 0} scenes in project
             </p>
           </div>
-          <Button
-            variant="outline"
-            className="rounded-sm h-9 border-border bg-card"
-            onClick={() => setShowAddScene((v) => !v)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Manually
-          </Button>
+          <div className="flex items-center gap-2">
+            {scenes && scenes.length > 0 && (
+              <Button
+                variant="outline"
+                className="rounded-sm h-9 border-border bg-card text-xs"
+                onClick={() => printShotList(scenes)}
+                title="Export shot list as PDF"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export PDF
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              className="rounded-sm h-9 border-border bg-card"
+              onClick={() => setShowAddScene((v) => !v)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Manually
+            </Button>
+          </div>
         </div>
 
         {showAddScene && (

@@ -48,7 +48,9 @@ import {
   FileText,
   CalendarDays,
   X,
+  Download,
 } from "lucide-react";
+import { printCallSheet } from "@/lib/pdf-export";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -352,6 +354,16 @@ function CallSheetPanel({
           )}
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 text-xs rounded-sm border-border"
+            onClick={() => printCallSheet(callSheet)}
+            title="Export call sheet as PDF"
+          >
+            <Download className="w-3.5 h-3.5 mr-1.5" />
+            Export PDF
+          </Button>
           <Button
             size="sm"
             variant="outline"
