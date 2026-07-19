@@ -3,20 +3,34 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Production Pulse API — film production management for filmmakers and students
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: projects
+    description: Film production projects
+  - name: scenes
+    description: Script scenes and breakdown
+  - name: shootDays
+    description: Shoot days and scheduling
+  - name: takes
+    description: Take logging (production stage)
+  - name: cuts
+    description: Review cuts (post-production)
+  - name: deliverables
+    description: Delivery tracking
+  - name: evidenceLog
+    description: Evidence log (audit trail)
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +38,1461 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Projects ──────────────────────────────────────────────────────────────
+  /projects:
+    get:
+      operationId: listProjects
+      tags: [projects]
+      summary: List all projects for the current user
+      responses:
+        "200":
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+    post:
+      operationId: createProject
+      tags: [projects]
+      summary: Create a new project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+      responses:
+        "201":
+          description: Created project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+  /projects/{id}:
+    get:
+      operationId: getProject
+      tags: [projects]
+      summary: Get a project by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateProject
+      tags: [projects]
+      summary: Update a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectPatch"
+      responses:
+        "200":
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteProject
+      tags: [projects]
+      summary: Delete a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /projects/{id}/summary:
+    get:
+      operationId: getProjectSummary
+      tags: [projects]
+      summary: Get project overview stats (scenes, days, takes, stage progress)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Project summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectSummary"
+
+  # ── Scenes (Development stage) ────────────────────────────────────────────
+  /projects/{projectId}/scenes:
+    get:
+      operationId: listScenes
+      tags: [scenes]
+      summary: List scenes for a project
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of scenes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Scene"
+    post:
+      operationId: createScene
+      tags: [scenes]
+      summary: Create a scene manually
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SceneInput"
+      responses:
+        "201":
+          description: Created scene
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scene"
+
+  /projects/{projectId}/scenes/{id}:
+    get:
+      operationId: getScene
+      tags: [scenes]
+      summary: Get a scene
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Scene
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scene"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateScene
+      tags: [scenes]
+      summary: Update a scene (records correction in evidence log)
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScenePatch"
+      responses:
+        "200":
+          description: Updated scene
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scene"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteScene
+      tags: [scenes]
+      summary: Delete a scene
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /projects/{projectId}/breakdown:
+    post:
+      operationId: runBreakdown
+      tags: [scenes]
+      summary: Run AI script breakdown — parses screenplay text into scenes
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BreakdownRequest"
+      responses:
+        "200":
+          description: Generated scenes (not yet saved — user reviews first)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BreakdownResult"
+        "503":
+          description: AI unavailable — caller should handle gracefully
+
+  /projects/{projectId}/breakdown/accept:
+    post:
+      operationId: acceptBreakdown
+      tags: [scenes]
+      summary: Accept and save AI breakdown scenes to the project
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptBreakdownRequest"
+      responses:
+        "201":
+          description: Saved scenes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Scene"
+
+  # ── Shoot Days (Pre-Production) ───────────────────────────────────────────
+  /projects/{projectId}/shoot-days:
+    get:
+      operationId: listShootDays
+      tags: [shootDays]
+      summary: List shoot days for a project
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of shoot days with their scheduled scenes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ShootDay"
+    post:
+      operationId: createShootDay
+      tags: [shootDays]
+      summary: Create a new shoot day
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShootDayInput"
+      responses:
+        "201":
+          description: Created shoot day
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShootDay"
+
+  /projects/{projectId}/shoot-days/{id}:
+    patch:
+      operationId: updateShootDay
+      tags: [shootDays]
+      summary: Update a shoot day (rename, change date)
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShootDayPatch"
+      responses:
+        "200":
+          description: Updated shoot day
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShootDay"
+    delete:
+      operationId: deleteShootDay
+      tags: [shootDays]
+      summary: Delete a shoot day (unschedules its scenes)
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /projects/{projectId}/shoot-days/{id}/schedule:
+    put:
+      operationId: setDaySchedule
+      tags: [shootDays]
+      summary: Set the full list of scenes for a shoot day (replaces existing)
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SceneScheduleInput"
+      responses:
+        "200":
+          description: Updated shoot day with scheduled scenes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShootDay"
+
+  /projects/{projectId}/shoot-days/{id}/call-sheet:
+    get:
+      operationId: getCallSheet
+      tags: [shootDays]
+      summary: Generate call sheet for a shoot day
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Generated call sheet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallSheet"
+
+  /projects/{projectId}/shoot-days/{id}/ad-review:
+    post:
+      operationId: requestAdReview
+      tags: [shootDays]
+      summary: Request AI First AD review of a call sheet
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: AD review feedback
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdReview"
+        "503":
+          description: AI unavailable
+
+  /projects/{projectId}/schedule-warnings:
+    get:
+      operationId: getScheduleWarnings
+      tags: [shootDays]
+      summary: Get all scheduling conflict warnings for the project
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of schedule warnings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScheduleWarning"
+
+  # ── Takes (Production stage) ──────────────────────────────────────────────
+  /projects/{projectId}/takes:
+    get:
+      operationId: listTakes
+      tags: [takes]
+      summary: List all takes for a project
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of takes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Take"
+    post:
+      operationId: logTake
+      tags: [takes]
+      summary: Log a new take
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TakeInput"
+      responses:
+        "201":
+          description: Logged take
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Take"
+
+  /projects/{projectId}/takes/{id}:
+    patch:
+      operationId: updateTake
+      tags: [takes]
+      summary: Update a take (circle/uncircle, add notes)
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TakePatch"
+      responses:
+        "200":
+          description: Updated take
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Take"
+
+  /projects/{projectId}/takes/circled:
+    get:
+      operationId: listCircledTakes
+      tags: [takes]
+      summary: List circled (selected) takes for editor's use
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Circled takes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Take"
+
+  # ── Review Cuts (Post-Production) ─────────────────────────────────────────
+  /projects/{projectId}/cuts:
+    get:
+      operationId: listCuts
+      tags: [cuts]
+      summary: List review cuts for a project
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of cuts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReviewCut"
+    post:
+      operationId: createCut
+      tags: [cuts]
+      summary: Create a new review cut (upload frame image URL + metadata)
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewCutInput"
+      responses:
+        "201":
+          description: Created cut
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewCut"
+
+  /projects/{projectId}/cuts/{id}:
+    patch:
+      operationId: updateCut
+      tags: [cuts]
+      summary: Update a cut (change status, title)
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewCutPatch"
+      responses:
+        "200":
+          description: Updated cut
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewCut"
+    delete:
+      operationId: deleteCut
+      tags: [cuts]
+      summary: Delete a review cut
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /projects/{projectId}/cuts/{id}/comments:
+    get:
+      operationId: listCutComments
+      tags: [cuts]
+      summary: List pinned comments on a cut
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CutComment"
+    post:
+      operationId: addCutComment
+      tags: [cuts]
+      summary: Add a pinned comment at an image coordinate
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CutCommentInput"
+      responses:
+        "201":
+          description: Created comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CutComment"
+
+  # ── Deliverables (Delivery stage) ─────────────────────────────────────────
+  /projects/{projectId}/deliverables:
+    get:
+      operationId: listDeliverables
+      tags: [deliverables]
+      summary: List deliverables for a project
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of deliverables
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Deliverable"
+    post:
+      operationId: createDeliverable
+      tags: [deliverables]
+      summary: Add a deliverable
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliverableInput"
+      responses:
+        "201":
+          description: Created deliverable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deliverable"
+
+  /projects/{projectId}/deliverables/{id}:
+    patch:
+      operationId: updateDeliverable
+      tags: [deliverables]
+      summary: Update a deliverable (move column, rename)
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliverablePatch"
+      responses:
+        "200":
+          description: Updated deliverable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deliverable"
+    delete:
+      operationId: deleteDeliverable
+      tags: [deliverables]
+      summary: Delete a deliverable
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Evidence Log ──────────────────────────────────────────────────────────
+  /projects/{projectId}/evidence-log:
+    get:
+      operationId: listEvidenceLog
+      tags: [evidenceLog]
+      summary: Get the full evidence log for a project (most recent 200 entries)
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Evidence log entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvidenceLogPage"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    # ── Projects ────────────────────────────────────────────────────────────
+    Project:
+      type: object
+      required: [id, userId, title, currentStage, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        title:
+          type: string
+        logline:
+          type: ["string", "null"]
+        genre:
+          type: ["string", "null"]
+        currentStage:
+          type: string
+          enum: [development, pre_production, production, post_production, delivery]
+        scriptText:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ProjectInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        logline:
+          type: string
+        genre:
+          type: string
+
+    ProjectPatch:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        logline:
+          type: string
+        genre:
+          type: string
+        currentStage:
+          type: string
+          enum: [development, pre_production, production, post_production, delivery]
+        scriptText:
+          type: string
+
+    ProjectSummary:
+      type: object
+      required: [id, title, currentStage, sceneCount, shootDayCount, takeCount, circledTakeCount, deliverableCount]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        currentStage:
+          type: string
+        sceneCount:
+          type: integer
+        scheduledSceneCount:
+          type: integer
+        shootDayCount:
+          type: integer
+        takeCount:
+          type: integer
+        circledTakeCount:
+          type: integer
+        deliverableCount:
+          type: integer
+        evidenceLogCount:
+          type: integer
+
+    # ── Scenes ──────────────────────────────────────────────────────────────
+    Scene:
+      type: object
+      required: [id, projectId, sceneNumber, heading, intExt, dayNight, location, summary, characters, props, costumes, aiGenerated, corrected, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        sceneNumber:
+          type: integer
+        heading:
+          type: string
+        intExt:
+          type: string
+          enum: [INT, EXT, INT/EXT]
+        dayNight:
+          type: string
+          enum: [DAY, NIGHT, DAWN, DUSK, CONTINUOUS]
+        location:
+          type: string
+        durationPages:
+          type: ["number", "null"]
+        summary:
+          type: string
+        characters:
+          type: array
+          items:
+            type: string
+        props:
+          type: array
+          items:
+            type: string
+        costumes:
+          type: array
+          items:
+            type: string
+        notes:
+          type: ["string", "null"]
+        aiGenerated:
+          type: boolean
+        corrected:
+          type: boolean
+        shootDayId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SceneInput:
+      type: object
+      required: [sceneNumber, heading, intExt, dayNight, location, summary]
+      properties:
+        sceneNumber:
+          type: integer
+        heading:
+          type: string
+        intExt:
+          type: string
+          enum: [INT, EXT, INT/EXT]
+        dayNight:
+          type: string
+          enum: [DAY, NIGHT, DAWN, DUSK, CONTINUOUS]
+        location:
+          type: string
+        durationPages:
+          type: number
+        summary:
+          type: string
+        characters:
+          type: array
+          items:
+            type: string
+        props:
+          type: array
+          items:
+            type: string
+        costumes:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+
+    ScenePatch:
+      type: object
+      properties:
+        sceneNumber:
+          type: integer
+        heading:
+          type: string
+        intExt:
+          type: string
+          enum: [INT, EXT, INT/EXT]
+        dayNight:
+          type: string
+          enum: [DAY, NIGHT, DAWN, DUSK, CONTINUOUS]
+        location:
+          type: string
+        durationPages:
+          type: number
+        summary:
+          type: string
+        characters:
+          type: array
+          items:
+            type: string
+        props:
+          type: array
+          items:
+            type: string
+        costumes:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+
+    BreakdownRequest:
+      type: object
+      required: [scriptText]
+      properties:
+        scriptText:
+          type: string
+          minLength: 1
+
+    BreakdownResult:
+      type: object
+      required: [scenes, aiAvailable]
+      properties:
+        scenes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SceneInput"
+        aiAvailable:
+          type: boolean
+        message:
+          type: ["string", "null"]
+
+    AcceptBreakdownRequest:
+      type: object
+      required: [scenes]
+      properties:
+        scenes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SceneInput"
+
+    # ── Shoot Days ──────────────────────────────────────────────────────────
+    ShootDay:
+      type: object
+      required: [id, projectId, dayNumber, label, scheduledSceneIds, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        dayNumber:
+          type: integer
+        label:
+          type: string
+        date:
+          type: ["string", "null"]
+          format: date
+        scheduledSceneIds:
+          type: array
+          items:
+            type: integer
+        scenes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Scene"
+        warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScheduleWarning"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ShootDayInput:
+      type: object
+      required: [label]
+      properties:
+        label:
+          type: string
+          minLength: 1
+        date:
+          type: string
+          format: date
+
+    ShootDayPatch:
+      type: object
+      properties:
+        label:
+          type: string
+        date:
+          type: string
+          format: date
+
+    SceneScheduleInput:
+      type: object
+      required: [sceneIds]
+      properties:
+        sceneIds:
+          type: array
+          items:
+            type: integer
+
+    ScheduleWarning:
+      type: object
+      required: [type, severity, message, shootDayId]
+      properties:
+        type:
+          type: string
+          enum: [idle_actor, excessive_locations, page_count_overrun]
+        severity:
+          type: string
+          enum: [warning, error]
+        message:
+          type: string
+        shootDayId:
+          type: integer
+        affectedActors:
+          type: array
+          items:
+            type: string
+        affectedLocations:
+          type: array
+          items:
+            type: string
+
+    CallSheet:
+      type: object
+      required: [shootDayId, dayNumber, label, scenes, castCalls, crewCallTime]
+      properties:
+        shootDayId:
+          type: integer
+        dayNumber:
+          type: integer
+        label:
+          type: string
+        date:
+          type: ["string", "null"]
+        scenes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Scene"
+        castCalls:
+          type: array
+          items:
+            $ref: "#/components/schemas/CastCall"
+        crewCallTime:
+          type: string
+        generalCallTime:
+          type: string
+
+    CastCall:
+      type: object
+      required: [character, callTime, onSetTime]
+      properties:
+        character:
+          type: string
+        callTime:
+          type: string
+        makeupTime:
+          type: ["string", "null"]
+        onSetTime:
+          type: string
+
+    AdReview:
+      type: object
+      required: [verdict, issues, coachingNote, aiAvailable]
+      properties:
+        verdict:
+          type: string
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdIssue"
+        coachingNote:
+          type: string
+        aiAvailable:
+          type: boolean
+
+    AdIssue:
+      type: object
+      required: [description, severity]
+      properties:
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [info, warning, error]
+
+    # ── Takes ────────────────────────────────────────────────────────────────
+    Take:
+      type: object
+      required: [id, projectId, sceneNumber, shotLabel, takeNumber, circled, loggedAt, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        sceneId:
+          type: ["integer", "null"]
+        shootDayId:
+          type: ["integer", "null"]
+        sceneNumber:
+          type: integer
+        shotLabel:
+          type: string
+        takeNumber:
+          type: integer
+        circled:
+          type: boolean
+        notes:
+          type: ["string", "null"]
+        loggedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    TakeInput:
+      type: object
+      required: [sceneNumber, shotLabel, takeNumber]
+      properties:
+        sceneId:
+          type: integer
+        shootDayId:
+          type: integer
+        sceneNumber:
+          type: integer
+        shotLabel:
+          type: string
+        takeNumber:
+          type: integer
+        circled:
+          type: boolean
+        notes:
+          type: string
+
+    TakePatch:
+      type: object
+      properties:
+        circled:
+          type: boolean
+        notes:
+          type: string
+        sceneNumber:
+          type: integer
+        shotLabel:
+          type: string
+        takeNumber:
+          type: integer
+
+    # ── Review Cuts ──────────────────────────────────────────────────────────
+    ReviewCut:
+      type: object
+      required: [id, projectId, title, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        title:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, changes_needed, approved]
+        notes:
+          type: ["string", "null"]
+        commentCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ReviewCutInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        imageUrl:
+          type: string
+        notes:
+          type: string
+
+    ReviewCutPatch:
+      type: object
+      properties:
+        title:
+          type: string
+        imageUrl:
+          type: string
+        status:
+          type: string
+          enum: [pending, changes_needed, approved]
+        notes:
+          type: string
+
+    CutComment:
+      type: object
+      required: [id, cutId, text, xPercent, yPercent, pinNumber, createdAt]
+      properties:
+        id:
+          type: integer
+        cutId:
+          type: integer
+        text:
+          type: string
+        xPercent:
+          type: number
+        yPercent:
+          type: number
+        pinNumber:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    CutCommentInput:
+      type: object
+      required: [text, xPercent, yPercent]
+      properties:
+        text:
+          type: string
+          minLength: 1
+        xPercent:
+          type: number
+        yPercent:
+          type: number
+
+    # ── Deliverables ─────────────────────────────────────────────────────────
+    Deliverable:
+      type: object
+      required: [id, projectId, title, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [not_started, in_progress, in_review, delivered]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    DeliverableInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        status:
+          type: string
+          enum: [not_started, in_progress, in_review, delivered]
+
+    DeliverablePatch:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [not_started, in_progress, in_review, delivered]
+
+    # ── Evidence Log ─────────────────────────────────────────────────────────
+    EvidenceLogEntry:
+      type: object
+      required: [id, projectId, userId, actionType, summary, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        userId:
+          type: string
+        actionType:
+          type: string
+        entityType:
+          type: ["string", "null"]
+        entityId:
+          type: ["integer", "null"]
+        summary:
+          type: string
+        metadataJson:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    EvidenceLogPage:
+      type: object
+      required: [entries, total, limit, offset]
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvidenceLogEntry"
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer

@@ -1,0 +1,11 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <rect x="20" y="80" width="160" height="100" fill="#000000" rx="2" />
+  <!-- Clapperboard top moving part -->
+  <g transform="rotate(-15, 20, 75)">
+    <rect x="20" y="45" width="160" height="30" fill="#000000" rx="2" />
+    <polygon points="40,45 60,75 80,75 60,45" fill="#C41E3A" />
+    <polygon points="100,45 120,75 140,75 120,45" fill="#C41E3A" />
+    <polygon points="160,45 180,75 180,45" fill="#C41E3A" />
+  </g>
+  <rect x="20" y="75" width="160" height="5" fill="#000000" />
+</svg>

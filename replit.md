@@ -1,45 +1,62 @@
-# [Project name]
+# Production Pulse
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
-
-## Run & Operate
-
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+A dual-purpose film production management and student teaching tool built for filmmaker/lecturer Mostafa Nagy. Students start in September 2026.
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, Vite, Wouter (routing), TanStack Query, Tailwind CSS, shadcn/ui |
+| Auth | Replit-managed Clerk (email + password) |
+| API | Express 5, TypeScript, OpenAPI spec → Orval codegen |
+| Database | PostgreSQL + Drizzle ORM |
+| AI | Anthropic Claude (script breakdown, schedule warnings, AD call-sheet review) |
 
-## Where things live
+## Monorepo layout
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+```
+artifacts/
+  production-pulse/   React-Vite frontend (routes: /)
+  api-server/         Express API server (routes: /api/*)
+lib/
+  api-spec/           openapi.yaml + Orval config (generates api-client-react and api-zod)
+  api-client-react/   Generated TanStack Query hooks
+  api-zod/            Generated Zod validators
+  db/                 Drizzle schema + migrations
+```
 
-## Architecture decisions
+## Key files
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- `lib/api-spec/openapi.yaml` — Single source of truth for all API endpoints
+- `lib/db/src/schema/` — One schema file per domain (projects, scenes, shootDays, takes, reviewCuts, deliverables, evidenceLog)
+- `artifacts/api-server/src/routes/` — One route file per domain
+- `artifacts/production-pulse/src/pages/` — One page file per route + stages/ folder
 
-## Product
+## Five production stages
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+1. **Development** — AI script breakdown + manual scene editing
+2. **Pre-Production** — Shoot day scheduling, call sheets, AI AD review
+3. **Production** — Digital slate (clapperboard), take logging
+4. **Post-Production** — Review cuts with pinned comments
+5. **Delivery** — Deliverables kanban
+
+## Development commands
+
+```bash
+# Run codegen after editing openapi.yaml
+pnpm --filter @workspace/api-spec run codegen
+
+# Push DB schema after editing schema files
+pnpm --filter @workspace/db run push
+
+# Restart both workflows after code changes
+# Use the Replit workflow panel
+```
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
-
-## Gotchas
-
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- Deep red accent (#C41E3A), serif headings (Playfair Display), paper-white cards
+- Mobile-friendly throughout (especially Production stage)
+- Evidence log is immutable — never delete entries
+- Teach Mode toggle in later task (#4)
+- AI provider: Anthropic (ANTHROPIC_API_KEY secret)
