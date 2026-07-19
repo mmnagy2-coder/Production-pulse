@@ -1,24 +1,33 @@
 import { Link, useLocation } from "wouter";
 import { useGetProject, getGetProjectQueryKey } from "@workspace/api-client-react";
-import { 
-  BookOpen, 
-  Film, 
-  Calendar, 
-  Clapperboard, 
-  Scissors, 
+import {
+  BookOpen,
+  Film,
+  Calendar,
+  Clapperboard,
+  Scissors,
   PackageCheck,
   Activity,
   ChevronLeft,
-  Menu
+  Menu,
+  Sun,
+  Moon,
+  GraduationCap,
+  LayoutGrid,
+  Clock,
 } from "lucide-react";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTheme } from "@/contexts/theme";
+import { useTeachMode } from "@/contexts/teach-mode";
 
 import DevelopmentStage from "./stages/development";
 import PreProductionStage from "./stages/pre-production";
 import ProductionStage from "./stages/production";
+import PostProductionStage from "./stages/post-production";
+import DeliveryStage from "./stages/delivery";
 import EvidenceLog from "./stages/evidence-log";
 
 const STAGES = [
@@ -29,13 +38,14 @@ const STAGES = [
   { id: "delivery", label: "Delivery", icon: PackageCheck },
 ];
 
-export default function ProjectWorkspace({ id, stage }: { id: string, stage?: string }) {
+export default function ProjectWorkspace({ id, stage }: { id: string; stage?: string }) {
   const projectId = parseInt(id, 10);
   const currentStage = stage || "development";
-  const [, setLocation] = useLocation();
+  const { theme, toggleTheme } = useTheme();
+  const { teachMode, toggleTeachMode } = useTeachMode();
 
   const { data: project, isLoading } = useGetProject(projectId, {
-    query: { enabled: !isNaN(projectId), queryKey: getGetProjectQueryKey(projectId) }
+    query: { enabled: !isNaN(projectId), queryKey: getGetProjectQueryKey(projectId) },
   });
 
   const renderStageContent = () => {
@@ -49,21 +59,9 @@ export default function ProjectWorkspace({ id, stage }: { id: string, stage?: st
       case "production":
         return <ProductionStage projectId={projectId} />;
       case "post-production":
+        return <PostProductionStage projectId={projectId} />;
       case "delivery":
-        return (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-            {(() => {
-              const StageIcon = STAGES.find(s => s.id === currentStage)?.icon || Film;
-              return <StageIcon className="w-12 h-12 mb-4 text-border" />;
-            })()}
-            <h2 className="font-serif text-2xl text-foreground mb-2">
-              {STAGES.find(s => s.id === currentStage)?.label || "Stage"}
-            </h2>
-            <p className="max-w-md">
-              {STAGES.find(s => s.id === currentStage)?.label} coming in the next update.
-            </p>
-          </div>
-        );
+        return <DeliveryStage projectId={projectId} />;
       default:
         return (
           <div className="flex-1 flex items-center justify-center p-8">
@@ -92,7 +90,7 @@ export default function ProjectWorkspace({ id, stage }: { id: string, stage?: st
           </div>
         )}
       </div>
-      
+
       <div className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
         <div className="text-xs uppercase tracking-wider font-medium text-muted-foreground mb-2 px-3">
           Stages
@@ -102,32 +100,63 @@ export default function ProjectWorkspace({ id, stage }: { id: string, stage?: st
             <Button
               variant="ghost"
               className={`w-full justify-start rounded-sm text-sm ${
-                currentStage === s.id 
-                  ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary font-medium" 
+                currentStage === s.id
+                  ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary font-medium"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               }`}
             >
-              <s.icon className={`w-4 h-4 mr-3 ${currentStage === s.id ? "text-primary" : "text-muted-foreground"}`} />
+              <s.icon
+                className={`w-4 h-4 mr-3 ${currentStage === s.id ? "text-primary" : "text-muted-foreground"}`}
+              />
               {s.label}
             </Button>
           </Link>
         ))}
 
-        <div className="mt-8 mb-2 px-3">
+        <div className="mt-6 mb-2 px-3">
           <div className="h-px bg-sidebar-border w-full" />
         </div>
-        
+
         <Link href={`/projects/${projectId}/evidence-log`}>
           <Button
             variant="ghost"
             className={`w-full justify-start rounded-sm text-sm ${
-              currentStage === "evidence-log" 
-                ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary font-medium" 
+              currentStage === "evidence-log"
+                ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary font-medium"
                 : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             }`}
           >
-            <Activity className={`w-4 h-4 mr-3 ${currentStage === "evidence-log" ? "text-primary" : "text-muted-foreground"}`} />
+            <Activity
+              className={`w-4 h-4 mr-3 ${currentStage === "evidence-log" ? "text-primary" : "text-muted-foreground"}`}
+            />
             Evidence Log
+          </Button>
+        </Link>
+
+        <div className="mt-6 mb-2 px-3">
+          <div className="h-px bg-sidebar-border w-full" />
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mt-3 mb-1">
+            Project Views
+          </p>
+        </div>
+
+        <Link href="/board">
+          <Button
+            variant="ghost"
+            className="w-full justify-start rounded-sm text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <LayoutGrid className="w-4 h-4 mr-3 text-muted-foreground" />
+            Board View
+          </Button>
+        </Link>
+
+        <Link href={`/projects/${projectId}/timeline`}>
+          <Button
+            variant="ghost"
+            className="w-full justify-start rounded-sm text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <Clock className="w-4 h-4 mr-3 text-muted-foreground" />
+            Timeline
           </Button>
         </Link>
       </div>
@@ -140,7 +169,11 @@ export default function ProjectWorkspace({ id, stage }: { id: string, stage?: st
         <div className="flex items-center gap-2 text-foreground">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 -ml-2 text-muted-foreground hover:text-foreground">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden h-8 w-8 -ml-2 text-muted-foreground hover:text-foreground"
+              >
                 <Menu className="w-5 h-5" />
               </Button>
             </SheetTrigger>
@@ -148,19 +181,50 @@ export default function ProjectWorkspace({ id, stage }: { id: string, stage?: st
               <SidebarContent />
             </SheetContent>
           </Sheet>
-          
-          <Link href="/dashboard" className="hidden sm:flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mr-4 transition-colors">
+
+          <Link
+            href="/dashboard"
+            className="hidden sm:flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mr-4 transition-colors"
+          >
             <ChevronLeft className="w-4 h-4 mr-1" />
             Projects
           </Link>
           <div className="h-4 w-px bg-border mx-2 hidden sm:block" />
-          
+
           <div className="flex items-center gap-2">
             <Film className="w-4 h-4 text-primary" />
             <span className="font-serif font-medium tracking-tight">Production Pulse</span>
           </div>
         </div>
-        <div className="flex items-center">
+
+        <div className="flex items-center gap-1">
+          {/* Teach Mode toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleTeachMode}
+            className={`h-8 gap-1.5 text-xs rounded-sm ${
+              teachMode
+                ? "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-900/40"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+            title={teachMode ? "Teach Mode ON — click to disable" : "Enable Teach Mode"}
+          >
+            <GraduationCap className="w-4 h-4" />
+            <span className="hidden sm:inline">{teachMode ? "Teach" : "Teach"}</span>
+          </Button>
+
+          {/* Dark mode toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="h-8 w-8 rounded-sm text-muted-foreground hover:text-foreground"
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </Button>
+
           <UserMenu />
         </div>
       </header>

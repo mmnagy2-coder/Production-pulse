@@ -19,6 +19,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TeachTip } from "@/components/teach-tip";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -317,6 +318,13 @@ export default function ProductionStage({ projectId }: { projectId: number }) {
               inputMode="numeric"
               maxLength={3}
             />
+          </div>
+
+          {/* Teach tip — shown above notes, stays in dark theme */}
+          <div className="mb-3">
+            <TeachTip title="Circling takes">
+              A "circled take" is director shorthand for "this is the one we use." Circle a take here and it appears automatically in the Post-Production stage as the editor's starting point — no notes to decipher later.
+            </TeachTip>
           </div>
 
           {/* Notes */}

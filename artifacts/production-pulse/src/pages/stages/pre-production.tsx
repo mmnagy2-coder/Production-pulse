@@ -54,6 +54,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TeachTip } from "@/components/teach-tip";
 import {
   Select,
   SelectContent,
@@ -796,6 +797,9 @@ export default function PreProductionStage({ projectId }: { projectId: number })
             <p className="text-xs text-muted-foreground mt-0.5">
               Schedule {allScenes.length} scenes across shoot days. Drag scenes from the bank onto days.
             </p>
+            <TeachTip title="Why shoot out of order?">
+              Films almost never shoot in story order. Scenes are grouped by location, cast availability, and lighting conditions to keep costs down. The scene bank on the left holds all unscheduled scenes — drag them onto shoot days on the right.
+            </TeachTip>
           </div>
           <div className="flex items-center gap-2">
             {addingDay ? (

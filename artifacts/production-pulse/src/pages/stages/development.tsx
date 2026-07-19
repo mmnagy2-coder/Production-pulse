@@ -45,6 +45,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { TeachTip } from "@/components/teach-tip";
 
 export default function DevelopmentStage({ projectId }: { projectId: number }) {
   const { toast } = useToast();
@@ -135,6 +136,9 @@ export default function DevelopmentStage({ projectId }: { projectId: number }) {
       <div className="w-full md:w-[400px] lg:w-[480px] border-r border-border bg-card flex flex-col flex-shrink-0">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h2 className="font-serif text-xl font-medium tracking-tight">Script Input</h2>
+          <TeachTip title="Development Stage">
+            The script breakdown is the foundation of every film. You paste your screenplay here and the AI extracts each scene — its location, time of day, and cast. This saves days of manual prep work.
+          </TeachTip>
           <Button 
             variant="outline" 
             size="sm" 

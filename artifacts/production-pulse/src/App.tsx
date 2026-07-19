@@ -11,6 +11,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import ProjectWorkspace from "@/pages/project-workspace";
+import ProjectBoard from "@/pages/project-board";
+import ProjectTimeline from "@/pages/project-timeline";
+import { ThemeProvider } from "@/contexts/theme";
+import { TeachModeProvider } from "@/contexts/teach-mode";
 
 const clerkPubKey = publishableKeyFromHost(
   window.location.hostname,
@@ -192,6 +196,18 @@ function ClerkProviderWithRoutes() {
             <Route path="/sign-up/*?" component={SignUpPage} />
             
             <Route path="/dashboard" component={ProtectedDashboard} />
+            <Route path="/board">
+              <Show when="signed-in"><ProjectBoard /></Show>
+              <Show when="signed-out"><Redirect to="/" /></Show>
+            </Route>
+            <Route path="/projects/:id/timeline">
+              {(params) => (
+                <>
+                  <Show when="signed-in"><ProjectTimeline id={params.id} /></Show>
+                  <Show when="signed-out"><Redirect to="/" /></Show>
+                </>
+              )}
+            </Route>
             <Route path="/projects/:id" component={ProtectedProjectWorkspace} />
             <Route path="/projects/:id/:stage" component={ProtectedProjectWorkspace} />
             
@@ -213,9 +229,13 @@ function ClerkProviderWithRoutes() {
 
 function App() {
   return (
-    <WouterRouter base={basePath}>
-      <ClerkProviderWithRoutes />
-    </WouterRouter>
+    <ThemeProvider>
+      <TeachModeProvider>
+        <WouterRouter base={basePath}>
+          <ClerkProviderWithRoutes />
+        </WouterRouter>
+      </TeachModeProvider>
+    </ThemeProvider>
   );
 }
 
