@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { format } from "date-fns";
-import { Plus, Film, Loader2, Calendar, FileText, Clapperboard, FolderOpen, Trash2 } from "lucide-react";
+import { Plus, Film, Loader2, Calendar, FileText, Sun, Moon, FolderOpen, Trash2 } from "lucide-react";
 import { useListProjects, useCreateProject, useDeleteProject, getListProjectsQueryKey, useGetProjectSummary, getGetProjectSummaryQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { UserMenu } from "@/components/layout/user-menu";
+import { useTheme } from "@/contexts/theme";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -112,7 +113,8 @@ export default function Dashboard() {
           <Film className="w-5 h-5 text-primary" />
           <span className="font-serif font-semibold text-lg tracking-tight">Production Pulse</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
           <UserMenu />
         </div>
       </header>
@@ -271,6 +273,21 @@ export default function Dashboard() {
 }
 
 // Separate component for stats to not block the main list render
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={toggleTheme}
+      title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      className="h-9 w-9 rounded-sm text-foreground hover:bg-secondary"
+    >
+      {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+    </Button>
+  );
+}
+
 function ProjectStats({ projectId }: { projectId: number }) {
   const { data: summary } = useGetProjectSummary(projectId, {
     query: { enabled: !!projectId, queryKey: getGetProjectSummaryQueryKey(projectId) }
