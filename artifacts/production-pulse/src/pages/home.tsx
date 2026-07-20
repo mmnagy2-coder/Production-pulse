@@ -1,8 +1,25 @@
-import { Link } from "wouter";
-import { Film } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Film, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useDemo } from "@/contexts/demo";
 
 export default function Home() {
+  const [, setLocation] = useLocation();
+  const { isDemo, isLoading, startDemo } = useDemo();
+
+  async function handleTryDemo() {
+    if (isDemo) {
+      setLocation("/dashboard");
+      return;
+    }
+    try {
+      await startDemo();
+      setLocation("/dashboard");
+    } catch {
+      // ignore — button remains usable
+    }
+  }
+
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background selection:bg-[hsl(349_73%_44%)] selection:text-white">
       <header className="px-6 md:px-12 py-6 flex items-center justify-between border-b border-border">
@@ -27,8 +44,8 @@ export default function Home() {
           The physical production folder, reimagined.
         </h1>
         <p className="text-lg text-muted-foreground mb-10 max-w-xl leading-relaxed">
-          A crisp, paper-based editorial aesthetic brought to screen. 
-          Production Pulse is a professional management tool for working filmmakers and students. 
+          A crisp, paper-based editorial aesthetic brought to screen.
+          Production Pulse is a professional management tool for working filmmakers and students.
           Uncluttered, purposeful, and calm.
         </p>
         <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -37,7 +54,19 @@ export default function Home() {
               Start your project
             </Button>
           </Link>
+          <Button
+            variant="outline"
+            className="rounded-sm h-11 px-8 text-base font-medium border-border hover:bg-secondary hover:text-foreground"
+            onClick={handleTryDemo}
+            disabled={isLoading}
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+            Try Demo
+          </Button>
         </div>
+        <p className="text-xs text-muted-foreground mt-4">
+          No sign-up required. Demo mode creates a temporary workspace with sample data.
+        </p>
       </main>
 
       <footer className="px-6 md:px-12 py-6 border-t border-border flex items-center justify-between text-xs text-muted-foreground">

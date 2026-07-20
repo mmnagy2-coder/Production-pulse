@@ -15,6 +15,7 @@ import {
   GraduationCap,
   LayoutGrid,
   Clock,
+  LogOut,
 } from "lucide-react";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTheme } from "@/contexts/theme";
 import { useTeachMode } from "@/contexts/teach-mode";
+import { useDemo } from "@/contexts/demo";
 
 import DevelopmentStage from "./stages/development";
 import PreProductionStage from "./stages/pre-production";
@@ -43,6 +45,7 @@ export default function ProjectWorkspace({ id, stage }: { id: string; stage?: st
   const currentStage = stage || "development";
   const { theme, toggleTheme } = useTheme();
   const { teachMode, toggleTeachMode } = useTeachMode();
+  const { isDemo, exitDemo } = useDemo();
 
   const { data: project, isLoading } = useGetProject(projectId, {
     query: { enabled: !isNaN(projectId), queryKey: getGetProjectQueryKey(projectId) },
@@ -165,6 +168,20 @@ export default function ProjectWorkspace({ id, stage }: { id: string; stage?: st
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background selection:bg-[hsl(349_73%_44%)] selection:text-white">
+      {isDemo && (
+        <div className="bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-800 px-4 py-2 flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+            <span className="font-medium">Demo Mode</span>
+            <span className="text-amber-700 dark:text-amber-300/80 hidden sm:inline">— Try every feature without an account.</span>
+          </div>
+          <button
+            onClick={exitDemo}
+            className="flex items-center gap-1.5 text-amber-800 dark:text-amber-200 hover:text-amber-900 dark:hover:text-amber-100 font-medium"
+          >
+            <LogOut className="w-4 h-4" /> Exit Demo
+          </button>
+        </div>
+      )}
       <header className="px-4 py-3 flex items-center justify-between border-b border-border bg-card sticky top-0 z-20">
         <div className="flex items-center gap-2 text-foreground">
           <Sheet>

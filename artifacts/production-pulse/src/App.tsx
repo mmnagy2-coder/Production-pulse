@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ClerkProvider, SignIn, SignUp, Show, useClerk } from '@clerk/react';
+import { ClerkProvider, SignIn, SignUp, Show, useClerk, useAuth } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { Switch, Route, useLocation, Router as WouterRouter, Redirect } from 'wouter';
@@ -7,6 +7,7 @@ import { queryClient } from "@/lib/queryClient";
 import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Loader2 } from "lucide-react";
 
 import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
@@ -15,6 +16,7 @@ import ProjectBoard from "@/pages/project-board";
 import ProjectTimeline from "@/pages/project-timeline";
 import { ThemeProvider } from "@/contexts/theme";
 import { TeachModeProvider } from "@/contexts/teach-mode";
+import { DemoProvider, useDemo } from "@/contexts/demo";
 
 const clerkPubKey = publishableKeyFromHost(
   window.location.hostname,
@@ -134,29 +136,38 @@ function HomeRedirect() {
   );
 }
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isSignedIn, isLoaded } = useAuth();
+  const { isDemo, isLoading: isDemoLoading } = useDemo();
+
+  if (!isLoaded || isDemoLoading) {
+    return (
+      <div className="flex h-[100dvh] w-full items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isSignedIn || isDemo) {
+    return <>{children}</>;
+  }
+
+  return <Redirect to="/" />;
+}
+
 function ProtectedDashboard() {
   return (
-    <>
-      <Show when="signed-in">
-        <Dashboard />
-      </Show>
-      <Show when="signed-out">
-        <Redirect to="/" />
-      </Show>
-    </>
+    <ProtectedRoute>
+      <Dashboard />
+    </ProtectedRoute>
   );
 }
 
 function ProtectedProjectWorkspace({ params }: { params: { id: string, stage?: string } }) {
   return (
-    <>
-      <Show when="signed-in">
-        <ProjectWorkspace id={params.id} stage={params.stage} />
-      </Show>
-      <Show when="signed-out">
-        <Redirect to="/" />
-      </Show>
-    </>
+    <ProtectedRoute>
+      <ProjectWorkspace id={params.id} stage={params.stage} />
+    </ProtectedRoute>
   );
 }
 
@@ -197,15 +208,11 @@ function ClerkProviderWithRoutes() {
             
             <Route path="/dashboard" component={ProtectedDashboard} />
             <Route path="/board">
-              <Show when="signed-in"><ProjectBoard /></Show>
-              <Show when="signed-out"><Redirect to="/" /></Show>
+              <ProtectedRoute><ProjectBoard /></ProtectedRoute>
             </Route>
             <Route path="/projects/:id/timeline">
               {(params) => (
-                <>
-                  <Show when="signed-in"><ProjectTimeline id={params.id} /></Show>
-                  <Show when="signed-out"><Redirect to="/" /></Show>
-                </>
+                <ProtectedRoute><ProjectTimeline id={params.id} /></ProtectedRoute>
               )}
             </Route>
             <Route path="/projects/:id" component={ProtectedProjectWorkspace} />
@@ -231,9 +238,11 @@ function App() {
   return (
     <ThemeProvider>
       <TeachModeProvider>
-        <WouterRouter base={basePath}>
-          <ClerkProviderWithRoutes />
-        </WouterRouter>
+        <DemoProvider>
+          <WouterRouter base={basePath}>
+            <ClerkProviderWithRoutes />
+          </WouterRouter>
+        </DemoProvider>
       </TeachModeProvider>
     </ThemeProvider>
   );

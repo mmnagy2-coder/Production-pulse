@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { format } from "date-fns";
-import { Plus, Film, Loader2, Calendar, FileText, Sun, Moon, FolderOpen, Trash2 } from "lucide-react";
+import { Plus, Film, Loader2, Calendar, FileText, Sun, Moon, FolderOpen, Trash2, LogOut } from "lucide-react";
 import { useListProjects, useCreateProject, useDeleteProject, getListProjectsQueryKey, useGetProjectSummary, getGetProjectSummaryQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { UserMenu } from "@/components/layout/user-menu";
 import { useTheme } from "@/contexts/theme";
+import { useDemo } from "@/contexts/demo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -35,6 +36,7 @@ export default function Dashboard() {
   const [logline, setLogline] = useState("");
   const [isSeeding, setIsSeeding] = useState(false);
   const seededRef = useRef(false);
+  const { isDemo, exitDemo } = useDemo();
 
   const { data: projects, isLoading } = useListProjects();
   const createProject = useCreateProject();
@@ -108,6 +110,21 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background selection:bg-[hsl(349_73%_44%)] selection:text-white">
+      {isDemo && (
+        <div className="bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-800 px-6 md:px-8 py-2 flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+            <span className="font-medium">Demo Mode</span>
+            <span className="text-amber-700 dark:text-amber-300/80">— Try every feature without an account.</span>
+          </div>
+          <button
+            onClick={exitDemo}
+            className="flex items-center gap-1.5 text-amber-800 dark:text-amber-200 hover:text-amber-900 dark:hover:text-amber-100 font-medium"
+          >
+            <LogOut className="w-4 h-4" /> Exit Demo
+          </button>
+        </div>
+      )}
+
       <header className="px-6 md:px-8 py-4 flex items-center justify-between border-b border-border bg-card">
         <div className="flex items-center gap-3 text-foreground">
           <Film className="w-5 h-5 text-primary" />

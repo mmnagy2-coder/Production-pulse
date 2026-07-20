@@ -8,6 +8,7 @@ import cutsRouter from "./cuts";
 import deliverablesRouter from "./deliverables";
 import evidenceLogRouter from "./evidenceLog";
 import seedDemoRouter from "./seedDemo";
+import demoSessionRouter from "./demoSession";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(cutsRouter);
 router.use(deliverablesRouter);
 router.use(evidenceLogRouter);
 router.use(seedDemoRouter);
+router.use(demoSessionRouter);
 
 export default router;
