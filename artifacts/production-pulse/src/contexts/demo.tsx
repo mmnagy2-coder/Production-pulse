@@ -4,7 +4,7 @@ interface DemoContextValue {
   isDemo: boolean;
   demoUserId: string | null;
   isLoading: boolean;
-  startDemo: () => Promise<void>;
+  startDemo: () => Promise<{ projectId: number | null }>;
   exitDemo: () => Promise<void>;
 }
 
@@ -12,7 +12,7 @@ const DemoContext = createContext<DemoContextValue>({
   isDemo: false,
   demoUserId: null,
   isLoading: true,
-  startDemo: async () => {},
+  startDemo: async () => ({ projectId: null }),
   exitDemo: async () => {},
 });
 
@@ -65,10 +65,11 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const startDemo = async () => {
     const res = await fetch("/api/demo-session", { method: "POST", credentials: "include" });
     if (!res.ok) throw new Error("Failed to start demo session");
-    const data = (await res.json()) as { demoUserId: string };
+    const data = (await res.json()) as { demoUserId: string; projectId: number | null };
     setIsDemo(true);
     setDemoUserId(data.demoUserId);
     try { localStorage.setItem(DEMO_LOCAL_STORAGE_KEY, "true"); } catch {}
+    return { projectId: data.projectId };
   };
 
   const exitDemo = async () => {

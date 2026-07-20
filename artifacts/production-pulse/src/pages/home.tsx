@@ -2,9 +2,11 @@ import { Link, useLocation } from "wouter";
 import { Film, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDemo } from "@/contexts/demo";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const { isDemo, isLoading, startDemo } = useDemo();
 
   async function handleTryDemo() {
@@ -13,10 +15,18 @@ export default function Home() {
       return;
     }
     try {
-      await startDemo();
-      setLocation("/dashboard");
+      const { projectId } = await startDemo();
+      if (projectId) {
+        setLocation(`/projects/${projectId}/development`);
+      } else {
+        setLocation("/dashboard");
+      }
     } catch {
-      // ignore — button remains usable
+      toast({
+        title: "Demo failed",
+        description: "Could not start demo mode. Please try signing up instead.",
+        variant: "destructive",
+      });
     }
   }
 

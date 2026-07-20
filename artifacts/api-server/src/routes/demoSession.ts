@@ -1,8 +1,6 @@
 import { Router, type IRouter } from "express";
 import { randomUUID } from "crypto";
-import { eq } from "drizzle-orm";
-import { db } from "@workspace/db";
-import { projectsTable } from "@workspace/db";
+import { createDemoProject } from "../lib/demoSeed";
 
 const router: IRouter = Router();
 
@@ -26,19 +24,28 @@ function getCookieOptions() {
 /**
  * POST /demo-session
  *
- * Starts a new demo session. Sets a session cookie and returns the demo user id.
- * If a demo session already exists, returns the existing user id.
+ * Starts a new demo session, sets a session cookie, and immediately seeds a
+ * demo project for that session so the user has something to explore the
+ * moment they land on the dashboard.
  */
 router.post("/demo-session", async (req, res): Promise<void> => {
-  const existing = req.cookies?.[DEMO_COOKIE] as string | undefined;
-  if (existing && existing.startsWith("demo_")) {
-    res.json({ demoUserId: existing });
-    return;
+  let demoUserId = req.cookies?.[DEMO_COOKIE] as string | undefined;
+  let isNew = false;
+
+  if (!demoUserId || !demoUserId.startsWith("demo_")) {
+    demoUserId = makeDemoUserId();
+    isNew = true;
   }
 
-  const demoUserId = makeDemoUserId();
   res.cookie(DEMO_COOKIE, demoUserId, getCookieOptions());
-  res.status(201).json({ demoUserId });
+
+  const { projectId, seeded } = await createDemoProject(demoUserId);
+
+  res.status(201).json({
+    demoUserId,
+    projectId,
+    seeded: isNew ? seeded : false,
+  });
 });
 
 /**
