@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "PZ3cqt6mjjx2cg3WWrki7"
+uri = "file://attached_assets/generated_images/production-pulse-hero.jpg"
+type = "image"
+title = "Production Pulse Hero Image"
