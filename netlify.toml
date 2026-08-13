@@ -4,8 +4,6 @@
 
 [build.environment]
   NODE_VERSION = "24"
-  # Replit's own build ran `pnpm store prune` after install; nothing equivalent
-  # is needed here.
 
 [functions]
   # api.mjs is emitted pre-bundled and fully self-contained by
