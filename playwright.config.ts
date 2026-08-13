@@ -4,8 +4,10 @@ import { defineConfig } from "@playwright/test";
  * Playwright configuration for Production Pulse API end-to-end tests.
  *
  * Tests hit the API server directly (no browser UI) so they are not blocked
- * by Clerk's auth wall. The API server boots in NODE_ENV=test mode which
+ * by the sign-in wall. The API server boots in NODE_ENV=test mode which
  * enables the X-Test-User-Id header bypass in requireAuth.ts.
+ *
+ * Requires DATABASE_URL to point at a database you don't mind writing to.
  */
 
 const TEST_PORT = 4099;

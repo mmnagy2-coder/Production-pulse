@@ -1,0 +1,27 @@
+[build]
+  command = "pnpm run build:netlify"
+  publish = "artifacts/production-pulse/dist/public"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+[functions]
+  # api.mjs is emitted pre-bundled and fully self-contained by
+  # artifacts/api-server/build.mjs, so there is nothing left to resolve.
+  directory = "netlify/functions"
+
+# Order matters: without this first, the SPA catch-all below would swallow /api.
+# Routing the API through the same origin as the app is what keeps the
+# frontend's relative /api paths, `credentials: "include"`, and the SameSite=Lax
+# demo cookie working without any CORS or cookie changes.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+# SPA fallback — wouter handles routing client-side.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

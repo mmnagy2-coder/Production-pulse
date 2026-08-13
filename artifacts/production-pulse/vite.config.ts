@@ -3,50 +3,20 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
-import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
-
-const rawPort = process.env.PORT;
-
-if (!rawPort) {
-  throw new Error(
-    'PORT environment variable is required but was not provided.',
-  );
-}
-
-const port = Number(rawPort);
+// PORT and BASE_PATH were injected by Replit's runtime. Off-platform they are
+// optional: the dev server picks a sane default and the app is served from the
+// domain root. Netlify's build environment sets neither, so these must not throw.
+const port = Number(process.env.PORT ?? 5173);
 
 if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
+  throw new Error(`Invalid PORT value: "${process.env.PORT}"`);
 }
 
-const basePath = process.env.BASE_PATH;
-
-if (!basePath) {
-  throw new Error(
-    'BASE_PATH environment variable is required but was not provided.',
-  );
-}
+const basePath = process.env.BASE_PATH ?? '/';
 
 export default defineConfig({
   base: basePath,
-  plugins: [
-    react(),
-    tailwindcss(),
-    runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== 'production' &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import('@replit/vite-plugin-cartographer').then((m) =>
-            m.cartographer({
-              root: path.resolve(import.meta.dirname, '..'),
-            }),
-          ),
-          await import('@replit/vite-plugin-dev-banner').then((m) =>
-            m.devBanner(),
-          ),
-        ]
-      : []),
-  ],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, 'src'),
@@ -72,6 +42,12 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    // In production, Netlify's /api/* redirect forwards to the API function.
+    // Locally there is no such proxy, so forward /api to the api-server dev
+    // port ourselves (see .env.example: LOCAL_API_PROXY_TARGET).
+    ...(process.env.LOCAL_API_PROXY_TARGET
+      ? { proxy: { '/api': { target: process.env.LOCAL_API_PROXY_TARGET, changeOrigin: true } } }
+      : {}),
   },
   preview: {
     port,

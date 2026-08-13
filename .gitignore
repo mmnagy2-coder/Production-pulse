@@ -44,6 +44,11 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-# Replit
-.cache/
-.local/
+# Environment
+.env
+.env.*
+!.env.example
+
+# Netlify — functions/ holds the esbuild-bundled API, rebuilt on every deploy
+.netlify/
+netlify/functions/

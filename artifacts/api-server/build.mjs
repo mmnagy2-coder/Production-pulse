@@ -9,18 +9,54 @@ import { rm } from "node:fs/promises";
 globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(artifactDir, "..", "..");
 
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
+  const netlifyDir = path.resolve(repoRoot, "netlify", "functions");
   await rm(distDir, { recursive: true, force: true });
+  await rm(netlifyDir, { recursive: true, force: true });
 
+  // The long-running server: local dev and the Playwright suite.
   await esbuild({
+    ...sharedOptions(),
     entryPoints: [path.resolve(artifactDir, "src/index.ts")],
+    outdir: distDir,
+    outExtension: { ".js": ".mjs" },
+    sourcemap: "linked",
+    plugins: [
+      // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
+      esbuildPluginPino({ transports: ["pino-pretty"] }),
+    ],
+  });
+
+  // The Netlify Function: the same Express app behind serverless-http.
+  //
+  // Emitted as ONE self-contained file with no sibling assets, because
+  // Netlify only ships files it can see from the function entry point.
+  // That rules out the pino plugin, whose worker files would be left behind —
+  // instead NODE_ENV is pinned to "production" at build time, which selects
+  // pino's transport-free branch (see src/lib/logger.ts) and makes the
+  // pretty-printing worker unnecessary. It also hard-disables the test-mode
+  // auth bypass and forces Secure cookies in the deployed bundle.
+  await esbuild({
+    ...sharedOptions(),
+    entryPoints: [path.resolve(artifactDir, "src/netlify.ts")],
+    outfile: path.resolve(netlifyDir, "api.mjs"),
+    // No sourcemap: a linked .map would not be uploaded, and an inline one
+    // would double the bundle for every deploy.
+    sourcemap: false,
+    define: {
+      "process.env.NODE_ENV": '"production"',
+    },
+  });
+}
+
+function sharedOptions() {
+  return {
     platform: "node",
     bundle: true,
     format: "esm",
-    outdir: distDir,
-    outExtension: { ".js": ".mjs" },
     logLevel: "info",
     // Some packages may not be bundleable, so we externalize them, we can add more here as needed.
     // Some of the packages below may not be imported or installed, but we're adding them in case they are in the future.
@@ -101,11 +137,6 @@ async function buildAll() {
       "puppeteer-core",
       "electron",
     ],
-    sourcemap: "linked",
-    plugins: [
-      // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
-      esbuildPluginPino({ transports: ["pino-pretty"] })
-    ],
     // Make sure packages that are cjs only (e.g. express) but are bundled continue to work in our esm output file
     banner: {
       js: `import { createRequire as __bannerCrReq } from 'node:module';
@@ -117,7 +148,7 @@ globalThis.__filename = __bannerUrl.fileURLToPath(import.meta.url);
 globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     `,
     },
-  });
+  };
 }
 
 buildAll().catch((err) => {
