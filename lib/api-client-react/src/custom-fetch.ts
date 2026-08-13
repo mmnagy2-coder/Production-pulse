@@ -34,11 +34,12 @@ export function setBaseUrl(url: string | null): void {
  * the getter is invoked; when it returns a non-null string, an
  * `Authorization: Bearer <token>` header is attached to the request.
  *
- * Useful for Expo bundles making token-gated API calls.
- * Pass `null` to clear the getter.
+ * Useful for Expo bundles making token-gated API calls, and for the web app:
+ * Supabase Auth issues bearer access tokens rather than session cookies, so
+ * the browser has nothing to attach automatically. See App.tsx, which registers
+ * the Supabase access token here at boot.
  *
- * NOTE: This function should never be used in web applications where session
- * token cookies are automatically associated with API calls by the browser.
+ * Pass `null` to clear the getter.
  */
 export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;
