@@ -2,13 +2,6 @@ import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import cookieParser from "cookie-parser";
-import { clerkMiddleware } from "@clerk/express";
-import { publishableKeyFromHost } from "@clerk/shared/keys";
-import {
-  CLERK_PROXY_PATH,
-  clerkProxyMiddleware,
-  getClerkProxyHost,
-} from "./middlewares/clerkProxyMiddleware";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
@@ -34,24 +27,13 @@ app.use(
   }),
 );
 
-// Clerk proxy must be mounted before body parsers — it streams raw bytes
-app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
-
 app.use(cors({ credentials: true, origin: true }));
 app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Resolve publishable key from host so the same server can serve multiple Clerk custom domains
-app.use(
-  clerkMiddleware((req) => ({
-    publishableKey: publishableKeyFromHost(
-      getClerkProxyHost(req) ?? "",
-      process.env.CLERK_PUBLISHABLE_KEY,
-    ),
-  })),
-);
-
+// Auth is per-route rather than global: requireAuth verifies the Supabase
+// access token (or a demo cookie) on the routes that need it.
 app.use("/api", router);
 
 export default app;
