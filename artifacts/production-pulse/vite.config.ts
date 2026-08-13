@@ -72,6 +72,12 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    // LOCAL DEV BYPASS: in Replit, /api is routed to the api-server workflow
+    // by the platform's own reverse proxy. Locally we have no such proxy, so
+    // forward /api to the api-server dev port ourselves.
+    ...(process.env.LOCAL_API_PROXY_TARGET
+      ? { proxy: { '/api': { target: process.env.LOCAL_API_PROXY_TARGET, changeOrigin: true } } }
+      : {}),
   },
   preview: {
     port,

@@ -32,8 +32,15 @@ function stripBase(path: string): string {
     : path;
 }
 
-if (!clerkPubKey) {
-  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env file');
+// LOCAL DEV BYPASS: normally this throws without a real Clerk key. No Clerk
+// app is configured in this local checkout, so we fall back to demo-only
+// routing (see DemoOnlyRoutes below) instead of hard-failing on boot.
+// publishableKeyFromHost() always synthesizes a fallback key from the
+// hostname when none is given, so clerkPubKey itself is never falsy here —
+// check the raw env var instead.
+const hasClerk = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+if (!hasClerk) {
+  console.warn('[dev] VITE_CLERK_PUBLISHABLE_KEY not set — running in demo-only mode, sign-in/sign-up disabled.');
 }
 
 const clerkAppearance = {
@@ -234,13 +241,80 @@ function ClerkProviderWithRoutes() {
   );
 }
 
+// LOCAL DEV BYPASS: demo-only equivalents of ProtectedRoute/the router that
+// don't touch Clerk hooks (they'd throw outside a ClerkProvider). Sign-in/
+// sign-up routes just bounce home since there's no auth to hand off to.
+function DemoOnlyProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isDemo, isLoading: isDemoLoading } = useDemo();
+
+  if (isDemoLoading) {
+    return (
+      <div className="flex h-[100dvh] w-full items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isDemo) {
+    return <>{children}</>;
+  }
+
+  return <Redirect to="/" />;
+}
+
+function DemoOnlyRoutes() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/sign-in/*?"><Redirect to="/" /></Route>
+          <Route path="/sign-up/*?"><Redirect to="/" /></Route>
+
+          <Route path="/dashboard">
+            <DemoOnlyProtectedRoute><Dashboard /></DemoOnlyProtectedRoute>
+          </Route>
+          <Route path="/board">
+            <DemoOnlyProtectedRoute><ProjectBoard /></DemoOnlyProtectedRoute>
+          </Route>
+          <Route path="/projects/:id/timeline">
+            {(params) => (
+              <DemoOnlyProtectedRoute><ProjectTimeline id={params.id} /></DemoOnlyProtectedRoute>
+            )}
+          </Route>
+          <Route path="/projects/:id">
+            {(params) => (
+              <DemoOnlyProtectedRoute><ProjectWorkspace id={params.id} /></DemoOnlyProtectedRoute>
+            )}
+          </Route>
+          <Route path="/projects/:id/:stage">
+            {(params) => (
+              <DemoOnlyProtectedRoute><ProjectWorkspace id={params.id} stage={params.stage} /></DemoOnlyProtectedRoute>
+            )}
+          </Route>
+
+          <Route>
+            <div className="flex h-[100dvh] w-full items-center justify-center bg-gray-50">
+              <div className="text-center">
+                <h1 className="text-2xl font-serif text-black mb-2">404 - Not Found</h1>
+                <p className="text-gray-500">The page you're looking for doesn't exist.</p>
+              </div>
+            </div>
+          </Route>
+        </Switch>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
 function App() {
   return (
     <ThemeProvider>
       <TeachModeProvider>
         <DemoProvider>
           <WouterRouter base={basePath}>
-            <ClerkProviderWithRoutes />
+            {hasClerk ? <ClerkProviderWithRoutes /> : <DemoOnlyRoutes />}
           </WouterRouter>
         </DemoProvider>
       </TeachModeProvider>

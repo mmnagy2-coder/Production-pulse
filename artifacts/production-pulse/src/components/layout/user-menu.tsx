@@ -11,7 +11,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogOut, User } from "lucide-react";
 
+// LOCAL DEV BYPASS: useUser()/useClerk() throw outside a <ClerkProvider>.
+// No Clerk app is configured in this local checkout (see App.tsx), so this
+// component never renders in that case — demo mode already has its own
+// "Exit Demo" affordance on dashboard/project-workspace, so a missing user
+// menu there is expected, not a regression.
+const hasClerk = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
 export function UserMenu() {
+  if (!hasClerk) return null;
+  return <UserMenuInner />;
+}
+
+function UserMenuInner() {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
 
