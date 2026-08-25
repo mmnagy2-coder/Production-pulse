@@ -34,6 +34,7 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, 'dist/public'),
     emptyOutDir: true,
   },
+  envDir: path.resolve(import.meta.dirname, '../..'),
   server: {
     port,
     strictPort: true,
@@ -42,12 +43,12 @@ export default defineConfig({
     fs: {
       strict: true,
     },
-    // In production, Netlify's /api/* redirect forwards to the API function.
-    // Locally there is no such proxy, so forward /api to the api-server dev
-    // port ourselves (see .env.example: LOCAL_API_PROXY_TARGET).
-    ...(process.env.LOCAL_API_PROXY_TARGET
-      ? { proxy: { '/api': { target: process.env.LOCAL_API_PROXY_TARGET, changeOrigin: true } } }
-      : {}),
+    proxy: {
+      '/api': {
+        target: process.env.LOCAL_API_PROXY_TARGET || 'http://localhost:8080',
+        changeOrigin: true,
+      },
+    },
   },
   preview: {
     port,
